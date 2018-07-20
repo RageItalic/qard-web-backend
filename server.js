@@ -6,7 +6,7 @@ const PORT          = process.env.PORT || 4036
 const app           = express()
 
 app.use(cors({
-	origin: ['http://localhost:8080'],
+	origin: ['http://localhost:8080', 'https://qard-web.firebaseapp.com'],
   credentials: true
 }))
 app.use(bodyParser.urlencoded({ extended: false }))

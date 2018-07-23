@@ -33,6 +33,7 @@ router.post('/create', (req, res) => {
 			let qrObj = {
 				eventId
 			}
+			
 			QRCode.toDataURL(`https://qard-web.firebaseapp.com/#/attendees/${eventId}/addAttendee`)
 				.then(qr => {
 					qrObj.addAttendee = qr

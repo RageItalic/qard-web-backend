@@ -30,8 +30,8 @@ router.post('/register', (req, res) => {
 			//set session here
 			req.session.userId = response.org_id
 			req.session.userEmail = req.body.ownerEmail
-			req.session.ownerName = req.body.accountOwnerName
-			req.session.orgName = req.body.organizationName
+			req.session.ownerName = req.body.ownerName
+			req.session.orgName = req.body.orgName
 			res.send(req.session)
 		})
 	})

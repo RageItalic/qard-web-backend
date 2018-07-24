@@ -14,13 +14,12 @@ router.post('/register', (req, res) => {
 	const password_hash = bcrypt.hashSync(req.body.ownerPassword, 10)
 	knex('organizations')
 		.insert([{
-			org_name: req.body.organizationName,
-			org_account_owner_name: req.body.accountOwnerName,
+			org_name: req.body.orgName,
+			org_account_owner_name: req.body.ownerName,
 			org_owner_email: req.body.ownerEmail,
 			password_hash
 		}])
 	.then(response => {
-		//set session here
 		knex
 			.select('org_id')
 			.from('organizations')
@@ -28,6 +27,7 @@ router.post('/register', (req, res) => {
 				org_owner_email: req.body.ownerEmail
 			})
 		.then(([response]) => {
+			//set session here
 			req.session.userId = response.org_id
 			req.session.userEmail = req.body.ownerEmail
 			req.session.ownerName = req.body.accountOwnerName

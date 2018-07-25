@@ -13,6 +13,46 @@ router.get('/', (req, res) => {
 	}
 })
 
+router.get('/all', (req, res) => {
+	if (req.session.userId) {
+		knex('events')
+			.select('*')
+			.where({
+				event_owner_id: req.session.userId
+			})
+			.orderBy('event_date', 'desc')
+		.then(response => console.log(response) || res.send(response))
+	} else {
+		console.log("DOWN HERE")
+		res.sendStatus(404)
+	}
+})
+
+router.get('/:eventId', (req, res) => {
+	if (req.session.userId) {
+		const {eventId} = req.params
+		let qrObj = {
+			eventId
+		}
+
+		QRCode.toDataURL(`https://qard-web.firebaseapp.com/#/attendees/${eventId}/addAttendee`)
+			.then(qr => {
+				qrObj.addAttendee = qr
+			})
+			.catch(err => console.error(err))
+
+		QRCode.toDataURL(`https://qard-web.firebaseapp.com/#/attendees/${eventId}/listAttendees`)
+			.then(qr => {
+				qrObj.listAttendees = qr
+				res.send(qrObj)
+			})
+			.catch(err => console.error(err))
+	} else {
+		console.log("DOWN HERE")
+		res.sendStatus(404)	
+	}
+})
+
 //enter the event into the db and then select the event id from that newly created event
 // 'http://somelinkhere.com/events/${event id selected}/addAttendee'
 // 'http://somelinkhere.com/events/${event id selected}/listAttendees'
@@ -33,7 +73,7 @@ router.post('/create', (req, res) => {
 			let qrObj = {
 				eventId
 			}
-			
+
 			QRCode.toDataURL(`https://qard-web.firebaseapp.com/#/attendees/${eventId}/addAttendee`)
 				.then(qr => {
 					qrObj.addAttendee = qr

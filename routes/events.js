@@ -1,6 +1,7 @@
 const express       = require('express')
 const router        = express.Router()
 const QRCode        = require('qrcode')
+const nodemailer    = require('nodemailer')
 const environment   = process.env.NODE_ENV || 'development'
 const configuration = require('../knexfile')[environment]
 const knex          = require('knex')(configuration); 
@@ -91,6 +92,66 @@ router.post('/create', (req, res) => {
 	} else {
 		console.log("DOWN HERE")
 		res.sendStatus(404)
+	}
+})
+
+router.get('/email/:eventId', (req, res) => {
+	if (req.session.userId) {
+		knex('attendees')
+			.select('attendee_email')
+			.where({
+				event_attended_id: req.params.eventId
+			})
+		.then(emails => {
+			console.log(emails)
+
+		  let transporter = nodemailer.createTransport({
+	      service: 'gmail',
+	      auth: {
+	        user: process.env.EMAILID,
+	        pass: process.env.EMAILPASS
+	      }
+	    })
+
+	    emails.map(({attendee_email}) => {
+	    	// setup email data with unicode symbols
+			  let mailOptions = {
+			    from: `${process.env.EMAILID}`, // sender address
+			    to: `${attendee_email}`, // list of receivers
+			    subject: 'List Of People Who Were At The Event You Attended. Qard.', // Subject line
+			    text: `Hi,
+
+			    	Here is the link that will show you who else attended the networking event that you were at. 
+
+			    	https://qard-web.firebaseapp.com/#/attendees/${req.params.eventId}/listAttendees` // plain text body
+			  }
+
+			  // send mail with defined transport object
+			  transporter.sendMail(mailOptions, (error, info) => {
+			    if (error) {
+			      return console.log(error);
+			      const message = {
+			        status: 400,
+			        message: 'There seems to be an issue, try again later.'
+			      }
+			      res.send(message)
+			    }
+
+			    console.log('Message sent: %s', info.messageId)
+			  })
+	    })
+
+  		const message = {
+	      status: 200,
+	      message: 'Email Sent.'
+	    }
+	    res.send(message)
+		})
+	} else {
+		res.send({
+			status: 401,
+			message: 'You are not logged in.'
+		})
 	}
 })
 

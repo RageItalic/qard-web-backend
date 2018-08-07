@@ -36,18 +36,28 @@ router.get('/:eventId', (req, res) => {
 			eventId
 		}
 
-		QRCode.toDataURL(`https://qard-web.firebaseapp.com/#/attendees/${eventId}/addAttendee`)
-			.then(qr => {
-				qrObj.addAttendee = qr
+		knex('events')
+			.select('event_name')
+			.where({
+				event_id: eventId
 			})
-			.catch(err => console.error(err))
+		.then(([event]) => {
+			console.log("is this name", event)
+			qrObj.event_name = event.event_name
 
-		QRCode.toDataURL(`https://qard-web.firebaseapp.com/#/attendees/${eventId}/listAttendees`)
-			.then(qr => {
-				qrObj.listAttendees = qr
-				res.send(qrObj)
-			})
-			.catch(err => console.error(err))
+			QRCode.toDataURL(`https://qard-web.firebaseapp.com/#/attendees/${eventId}/addAttendee`)
+				.then(qr => {
+					qrObj.addAttendee = qr
+				})
+				.catch(err => console.error(err))
+
+			QRCode.toDataURL(`https://qard-web.firebaseapp.com/#/attendees/${eventId}/listAttendees`)
+				.then(qr => {
+					qrObj.listAttendees = qr
+					res.send(qrObj)
+				})
+				.catch(err => console.error(err))
+		})
 	} else {
 		console.log("DOWN HERE")
 		res.sendStatus(404)	
@@ -69,19 +79,21 @@ router.post('/create', (req, res) => {
 				event_date: req.body.eventDate,
 				event_owner_id: req.session.userId
 			}])
-			.returning('event_id')
-		.then(([eventId]) => {
+			.returning(['event_id', 'event_name'])
+		.then(([info]) => {
+			console.log("creating new events huh?", info)
 			let qrObj = {
-				eventId
+				event_id: info.event_id,
+				event_name: info.event_name
 			}
 
-			QRCode.toDataURL(`https://qard-web.firebaseapp.com/#/attendees/${eventId}/addAttendee`)
+			QRCode.toDataURL(`https://qard-web.firebaseapp.com/#/attendees/${info.eventId}/addAttendee`)
 				.then(qr => {
 					qrObj.addAttendee = qr
 				})
 				.catch(err => console.error(err))
 
-			QRCode.toDataURL(`https://qard-web.firebaseapp.com/#/attendees/${eventId}/listAttendees`)
+			QRCode.toDataURL(`https://qard-web.firebaseapp.com/#/attendees/${info.eventId}/listAttendees`)
 				.then(qr => {
 					qrObj.listAttendees = qr
 					res.send(qrObj)
